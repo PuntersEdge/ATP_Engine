@@ -29,7 +29,7 @@ Module Module1
 
         SessionToken = API.GetSessionKey("ZfI8hcEMs3uAzPmD", "username=00alawre&password=portsmouth1")
 
-        database.SQL("TRUNCATE TABLE ProcessLog")
+
         '-------------------------------------------------------------------------------------------------------------------
         '
         'Iterate through row and update odds
@@ -71,7 +71,6 @@ Module Module1
 
                     Dim Matched As String = selectionID("totalMatched")
 
-
                     Dim runners As List(Of JToken) = selectionID.Children().ToList
 
                     For Each runner As JProperty In runners
@@ -88,34 +87,50 @@ Module Module1
                                 If Not Status = "REMOVED" Then
 
                                     Dim lastprice As Decimal = 0
+                                    Dim selection_TotalMatched As Decimal = 0
+
                                     Dim selection As String = horse("selectionId")
 
                                     If Not IsNothing(horse("lastPriceTraded")) Then
                                         lastprice = horse("lastPriceTraded")
+
+                                    Else
+
+                                        lastprice = 0
+
+                                    End If
+
+                                    If Not IsNothing(horse("totalMatched")) Then
+
+                                        selection_TotalMatched = horse("totalMatched")
+
+                                    Else
+
+                                        selection_TotalMatched = 0
+
                                     End If
 
 
-                                    Dim selection_TotalMatched As String = horse("totalMatched")
 
 
                                     Using con As New SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings("PuntersEdgeDB").ConnectionString)
 
-                                        Dim comm As New SqlCommand
+                                            Dim comm As New SqlCommand
 
-                                        comm.CommandText = "EXECUTE ATP_Engine @Price=" & lastprice & ", @Selection='" & selection & "'"
+                                            comm.CommandText = "EXECUTE ATP_Engine @Price=" & lastprice & ", @Selection='" & selection & "', @MarketID ='" & marketID & "'"
 
-                                        comm.Connection = con
+                                            comm.Connection = con
 
-                                        con.Open()
-                                        comm.ExecuteNonQuery()
-                                        con.Close()
+                                            con.Open()
+                                            comm.ExecuteNonQuery()
+                                            con.Close()
 
-                                    End Using
+                                        End Using
 
 
-                                Else
+                                    Else
 
-                                    Using con As New SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings("PuntersEdgeDB").ConnectionString)
+                                        Using con As New SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings("PuntersEdgeDB").ConnectionString)
 
                                         Dim selection As String = horse("selectionId")
                                         Dim comm As New SqlCommand
@@ -132,7 +147,8 @@ Module Module1
 		                                                    Price2 = 0,
 		                                                    LastTradedPrice = 0
 
-                                                            WHERE SelectionID = " & selection
+                                                            WHERE SelectionID = " & selection & "
+                                                             MarketID = " & marketID
 
 
                                         comm.Connection = con
@@ -157,6 +173,10 @@ Module Module1
             End If
 
         Next
+
+        Dim db As New DatabseActions
+        db.EXECSPROC("RunLiveSelections", "")
+
     End Sub
 
 End Module
