@@ -176,6 +176,7 @@ Module Module1
 
         Dim db As New DatabseActions
         db.EXECSPROC("RunLiveSelections", "")
+        db.EXECSPROC("v2_RunLiveSelections", "")
 
     End Sub
 
